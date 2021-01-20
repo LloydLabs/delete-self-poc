@@ -1,11 +1,19 @@
 #include "main.h"
 
-static HANDLE ds_open_handle(PWCHAR pwPath)
+static
+HANDLE
+ds_open_handle(
+	PWCHAR pwPath
+)
 {
 	return CreateFileW(pwPath, GENERIC_READ | SYNCHRONIZE | DELETE, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
 }
 
-static BOOL ds_rename_handle(HANDLE hHandle)
+static
+BOOL
+ds_rename_handle(
+	HANDLE hHandle
+)
 {
 	FILE_RENAME_INFO fRename;
 	RtlSecureZeroMemory(&fRename, sizeof(fRename));
@@ -18,7 +26,11 @@ static BOOL ds_rename_handle(HANDLE hHandle)
 	return SetFileInformationByHandle(hHandle, FileRenameInfo, &fRename, sizeof(fRename) + sizeof(lpwStream));
 }
 
-static BOOL ds_deposite_handle(HANDLE hHandle)
+static
+BOOL 
+ds_deposite_handle(
+	HANDLE hHandle
+)
 {
 	// set FILE_DISPOSITION_INFO::DeleteFile to TRUE
 	FILE_DISPOSITION_INFO fDelete;
@@ -29,7 +41,11 @@ static BOOL ds_deposite_handle(HANDLE hHandle)
 	return SetFileInformationByHandle(hHandle, FileDispositionInfo, &fDelete, sizeof(fDelete));
 }
 
-int main(int argc, char** argv)
+int
+main(
+	int argc,
+	char** argv
+)
 {
 	WCHAR wcPath[MAX_PATH + 1];
 	RtlSecureZeroMemory(wcPath, sizeof(wcPath));
