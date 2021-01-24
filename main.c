@@ -6,7 +6,7 @@ ds_open_handle(
 	PWCHAR pwPath
 )
 {
-	return CreateFileW(pwPath, GENERIC_READ | SYNCHRONIZE | DELETE, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+	return CreateFileW(pwPath, DELETE, 0, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
 }
 
 static
