@@ -15,15 +15,20 @@ ds_rename_handle(
 	HANDLE hHandle
 )
 {
-	FILE_RENAME_INFO fRename;
-	RtlSecureZeroMemory(&fRename, sizeof(fRename));
-
 	// set our FileNameLength and FileName to DS_STREAM_RENAME
 	LPWSTR lpwStream = DS_STREAM_RENAME;
-	fRename.FileNameLength = sizeof(lpwStream);
-	RtlCopyMemory(fRename.FileName, lpwStream, sizeof(lpwStream));
+	int rename_info_size = sizeof(FILE_RENAME_INFO) + sizeof(lpwStream) - 1;
 
-	return SetFileInformationByHandle(hHandle, FileRenameInfo, &fRename, sizeof(fRename) + sizeof(lpwStream));
+	PFILE_RENAME_INFO fRename = (PFILE_RENAME_INFO)malloc(rename_info_size);
+	if (!fRename)
+		return 0;
+
+	fRename->FileNameLength = sizeof(lpwStream);
+	RtlCopyMemory(fRename->FileName, lpwStream, sizeof(lpwStream));
+
+	BOOL status = SetFileInformationByHandle(hHandle, FileRenameInfo, fRename, rename_info_size);
+	free(fRename);
+	return status;
 }
 
 static
