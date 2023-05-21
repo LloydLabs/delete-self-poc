@@ -16,15 +16,15 @@ ds_rename_handle(
 )
 {
 	// set our FileNameLength and FileName to DS_STREAM_RENAME
-	LPWSTR lpwStream = DS_STREAM_RENAME;
-	int rename_info_size = sizeof(FILE_RENAME_INFO) + sizeof(lpwStream) - 1;
+	int rename_info_size = sizeof(FILE_RENAME_INFO) + sizeof(DS_STREAM_RENAME) - 1;
 
 	PFILE_RENAME_INFO fRename = (PFILE_RENAME_INFO)malloc(rename_info_size);
 	if (!fRename)
 		return 0;
 
-	fRename->FileNameLength = sizeof(lpwStream);
-	RtlCopyMemory(fRename->FileName, lpwStream, sizeof(lpwStream));
+	LPWSTR lpwStream = DS_STREAM_RENAME;
+	fRename->FileNameLength = sizeof(DS_STREAM_RENAME);
+	RtlCopyMemory(fRename->FileName, lpwStream, sizeof(DS_STREAM_RENAME));
 
 	BOOL status = SetFileInformationByHandle(hHandle, FileRenameInfo, fRename, rename_info_size);
 	free(fRename);
