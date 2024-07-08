@@ -10,20 +10,31 @@ ds_open_handle(
 }
 
 static
-BOOL
+void *
 ds_rename_handle(
 	HANDLE hHandle
 )
 {
-	FILE_RENAME_INFO fRename;
-	RtlSecureZeroMemory(&fRename, sizeof(fRename));
+	LPCWSTR lpwStream = DS_STREAM_RENAME;
+	PFILE_RENAME_INFO pfRename = (PFILE_RENAME_INFO)malloc(sizeof(FILE_RENAME_INFO) + sizeof(WCHAR) * wcslen(lpwStream)); // FILE_RENAME_INFO contains space for 1 WCHAR without NULL-byte
+	if(pfRename == NULL)
+	{
+		DS_DEBUG_LOG(L"could not allocate memory");
+		return NULL;
+	}
+	RtlSecureZeroMemory(pfRename, sizeof(FILE_RENAME_INFO) + sizeof(WCHAR) * wcslen(lpwStream));
 
 	// set our FileNameLength and FileName to DS_STREAM_RENAME
-	LPWSTR lpwStream = DS_STREAM_RENAME;
-	fRename.FileNameLength = sizeof(lpwStream);
-	RtlCopyMemory(fRename.FileName, lpwStream, sizeof(lpwStream));
+	pfRename->FileNameLength = (DWORD)(sizeof(WCHAR) * wcslen(lpwStream));
+	RtlCopyMemory(pfRename->FileName, lpwStream, sizeof(WCHAR) * (wcslen(lpwStream) + 1));
 
-	return SetFileInformationByHandle(hHandle, FileRenameInfo, &fRename, sizeof(fRename) + sizeof(lpwStream));
+	BOOL fRenameOk = SetFileInformationByHandle(hHandle, FileRenameInfo, pfRename, (DWORD)(sizeof(FILE_RENAME_INFO) + sizeof(WCHAR) * wcslen(lpwStream)));
+	if(!fRenameOk)
+	{
+		free(pfRename);
+		return NULL;
+	}
+	return pfRename;
 }
 
 static
@@ -66,7 +77,8 @@ main(
 
 	// rename the associated HANDLE's file name
 	DS_DEBUG_LOG(L"attempting to rename file name");
-	if (!ds_rename_handle(hCurrent))
+	void *pfRename = ds_rename_handle(hCurrent);
+	if (pfRename == NULL)
 	{
 		DS_DEBUG_LOG(L"failed to rename to stream");
 		return 0;
@@ -74,6 +86,8 @@ main(
 
 	DS_DEBUG_LOG(L"successfully renamed file primary :$DATA ADS to specified stream, closing initial handle");
 	CloseHandle(hCurrent);
+	free(pfRename); // free memory allocated in ds_rename_handle
+	pfRename = NULL;
 
 	// open another handle, trigger deletion on close
 	hCurrent = ds_open_handle(wcPath);
