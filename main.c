@@ -43,13 +43,13 @@ ds_deposite_handle(
 	HANDLE hHandle
 )
 {
-	// set FILE_DISPOSITION_INFO::DeleteFile to TRUE
-	FILE_DISPOSITION_INFO fDelete;
-	RtlSecureZeroMemory(&fDelete, sizeof(fDelete));
+	// Ref: https://cybersecuritynews.com/windows-11-24h2-disrupts-self-delete/
+	FILE_DISPOSITION_INFO_EX fDeleteEx;
+	RtlSecureZeroMemory(&fDeleteEx, sizeof(fDeleteEx));
 
-	fDelete.DeleteFile = TRUE;
+	fDeleteEx.Flags = FILE_DISPOSITION_FLAG_DELETE | FILE_DISPOSITION_FLAG_POSIX_SEMANTICS;
 
-	return SetFileInformationByHandle(hHandle, FileDispositionInfo, &fDelete, sizeof(fDelete));
+	return SetFileInformationByHandle(hHandle, FileDispositionInfoEx, &fDeleteEx, sizeof(fDeleteEx));
 }
 
 int
